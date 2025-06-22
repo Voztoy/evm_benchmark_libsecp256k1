@@ -23,8 +23,14 @@
    make
    sudo make install
    ```
-
    
+- Copy 3 file và code
+   ```bash
+   nano evm_benchmark.cpp
+   nano sha3.h
+   nano sha3.c
+   ```
+  
 - Biên dịch và và chạy
    ```bash
    g++ evm_benchmark.cpp sha3.c -o evm_benchmark \
