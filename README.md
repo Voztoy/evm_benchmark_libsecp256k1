@@ -26,7 +26,7 @@
    sudo ldconfig
    ```
    
-- Copy 3 file và code
+- Copy 3 file và code (Lưu Ctrl+O, enter, Ctrl+x)
    ```bash
    cd
    nano evm_benchmark.cpp
