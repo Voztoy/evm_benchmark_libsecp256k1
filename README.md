@@ -23,6 +23,7 @@
    ./configure --enable-module-ecdh --enable-module-recovery
    make
    sudo make install
+   sudo ldconfig
    ```
    
 - Copy 3 file và code
