@@ -13,7 +13,7 @@
    sudo apt install libssl-dev -y
    ```
 
-- Cài C++
+- Cài libsecp256k1
    ```bash
    sudo apt update
    sudo apt install autoconf libtool pkg-config build-essential
