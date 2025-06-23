@@ -30,13 +30,13 @@
    ```bash
    cd
    nano evm_benchmark.cpp
-   nano sha3.h
-   nano sha3.c
+   nano keccak.h
+   nano keccak.c
    ```
   
 - Biên dịch và và chạy 
    ```bash
-   g++ evm_benchmark.cpp sha3.c -o evm_benchmark \
+   g++ evm_benchmark.cpp keccak.c -o evm_benchmark \
      -O3 -march=native -fopenmp \
      -lsecp256k1
   ./evm_benchmark
