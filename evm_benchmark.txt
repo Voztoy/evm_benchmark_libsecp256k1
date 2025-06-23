@@ -10,7 +10,7 @@
 #include <cstring>
 #include <omp.h>
 #include <secp256k1.h>
-#include "sha3.h"
+#include "keccak.h"
 
 static inline std::string toHex(const unsigned char* data, size_t len) {
     std::string s;
@@ -24,7 +24,7 @@ static inline std::string toHex(const unsigned char* data, size_t len) {
 }
 
 static inline void keccak256(const unsigned char* data, size_t len, unsigned char* out) {
-    sha3_256(out, data, len);
+    keccak_256(out, data, len);
 }
 
 bool lastNDigitsSame(const char* hex, int N) {
