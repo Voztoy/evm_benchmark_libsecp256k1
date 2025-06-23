@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
         std::uniform_int_distribution<uint64_t> dist;
 
         // Create libsecp256k1 context per thread
-        secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+        secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
         unsigned char seckey[32];
         unsigned char pubkey[65];
         size_t pubkeylen = 65;
