@@ -34,12 +34,21 @@
    nano keccak.c
    ```
   
-- Biên dịch và và chạy 
+- Biên dịch evm_benchmark.cpp
    ```bash
    g++ evm_benchmark.cpp keccak.c -o evm_benchmark \
      -O3 -march=native -fopenmp \
      -lsecp256k1
   ./evm_benchmark
+   ```
+- Chạy evm_benchmark.cpp
+  evm_benchmark.cpp có logic tạo các số cuối trùng nhau, sửa số muốn chọn ví dụ 5 là 5 số cuối giống nhau, mỗi số cuối giống nhau tỷ lệ 1/16 nhân lên (mở nano evm_benchmark.cpp để sửa)
+   ```bash
+    if (!ok || !lastNDigitsSame(hexp, 5)) continue;
+   ```
+   Chạy file để tìm ví, muốn tìm bao nhiêu thì thay vào, ví dụ 10
+   ```bash
+    ./evm_benchmark 10
    ```
   
   
