@@ -1,0 +1,125 @@
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <fstream>
+#include <chrono>
+#include <random>
+#include <string>
+#include <atomic>
+#include <cstring>
+#include <omp.h>
+#include <secp256k1.h>
+#include "keccak.h"
+
+static inline std::string toHex(const unsigned char* data, size_t len) {
+    std::string s;
+    s.reserve(len * 2);
+    const char* hex = "0123456789abcdef";
+    for (size_t i = 0; i < len; ++i) {
+        s.push_back(hex[data[i] >> 4]);
+        s.push_back(hex[data[i] & 0xF]);
+    }
+    return s;
+}
+
+static inline void keccak256(const unsigned char* data, size_t len, unsigned char* out) {
+    keccak_256(out, data, len);
+}
+
+// Generate a random seed string (dummy, not BIP39 mnemonic)
+std::string randomSeed(std::mt19937_64& eng) {
+    static const char charset[] =
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "0123456789";
+    std::uniform_int_distribution<> dist(0, sizeof(charset) - 2);
+    std::string seed;
+    for (int i = 0; i < 16; ++i)
+        seed += charset[dist(eng)];
+    return seed;
+}
+
+int main(int argc, char* argv[]) {
+    int targetCount = (argc > 1 ? std::atoi(argv[1]) : 1);
+    if (targetCount < 1) targetCount = 1;
+
+    std::atomic<int> matched(0);
+    std::atomic<uint64_t> attempts(0);
+
+    std::ofstream outFile("wallet.csv", std::ios::app);
+    if (!outFile) {
+        std::cerr << "Error: Cannot open wallet.csv for writing.\n";
+        return 1;
+    }
+
+    // Write CSV headers if empty
+    std::ifstream test("wallet.csv");
+    if (test.peek() == std::ifstream::traits_type::eof())
+        outFile << "Private Key,Address,Seed\n";
+    test.close();
+
+    auto start = std::chrono::high_resolution_clock::now();
+    std::random_device rd;
+
+    #pragma omp parallel
+    {
+        std::mt19937_64 eng(rd() + omp_get_thread_num());
+        std::uniform_int_distribution<uint64_t> dist;
+
+        secp256k1_context* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+        unsigned char seckey[32];
+        unsigned char pubkey[65];
+        size_t pubkeylen = 65;
+        unsigned char hash[32];
+        char addrBuf[43];
+        addrBuf[0] = '0'; addrBuf[1] = 'x';
+
+        while (matched.load(std::memory_order_relaxed) < targetCount) {
+            attempts.fetch_add(1, std::memory_order_relaxed);
+
+            for (int i = 0; i < 4; ++i) {
+                uint64_t r = dist(eng);
+                std::memcpy(seckey + i * 8, &r, 8);
+            }
+            if (!secp256k1_ec_seckey_verify(ctx, seckey)) continue;
+
+            secp256k1_pubkey pub;
+            if (!secp256k1_ec_pubkey_create(ctx, &pub, seckey)) continue;
+
+            pubkeylen = 65;
+            secp256k1_ec_pubkey_serialize(ctx, pubkey, &pubkeylen, &pub, SECP256K1_EC_UNCOMPRESSED);
+
+            keccak256(pubkey + 1, 64, hash);
+            std::string hexAddr = toHex(hash + 12, 20);
+            memcpy(addrBuf + 2, hexAddr.c_str(), 40);
+            addrBuf[42] = '\0';
+
+            int m = matched.fetch_add(1) + 1;
+            if (m <= targetCount) {
+                std::string priv = "0x" + toHex(seckey, 32);
+                std::string addr = "0x" + hexAddr;
+                std::string seed = randomSeed(eng);
+
+                #pragma omp critical
+                {
+                    std::cout << "[" << m << "/" << targetCount << "] " << addr << "\n";
+                    outFile << priv << "," << addr << "," << seed << "\n";
+                }
+            }
+        }
+
+        secp256k1_context_destroy(ctx);
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    double seconds = std::chrono::duration<double>(end - start).count();
+    uint64_t tot = attempts.load();
+
+    std::cout << "\n✅ Tổng thử: " << tot
+              << "\n⏱️ Thời gian: " << seconds << " giây"
+              << "\n⚡ Tốc độ: " << (uint64_t)(tot / seconds) << " ví/giây"
+              << "\n🎉 Số ví tạo ra: " << matched.load() << "\n";
+
+    outFile.close();
+    return 0;
+}
