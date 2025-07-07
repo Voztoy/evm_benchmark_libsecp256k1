@@ -33,7 +33,7 @@
    nano keccak.h
    nano keccak.c
    ```
-  
+evm_benchmark và evm_benchmark_0 có logic khác nhau. evm_benchmark tạo ví 10 số đầu vào 10 số cuối, số cuối trùng nhau theo yêu cầu evm_benchmark_0 tạo số cuối trùng nhau thôi, ít logic thì nhanh hơn. Sử dụng chung file làm theo bước 5.
 # 5.  Biên dịch và chạy evm_benchmark.cpp
 - Biên dịch
    ```bash
